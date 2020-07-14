@@ -59,6 +59,7 @@ VOID FloatValueRegMemPackedType2(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size
     }
     
 }
+
 VOID FloatValueRegMemPackedType3(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size, bool checkSP){
     if(checkSP){
         FLT32 value1;
@@ -83,6 +84,23 @@ VOID FloatValueRegMemPackedType3(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size
             PIN_SafeCopy(&value2, (void *)(addr + 8*(i+1)), 8);
             OutFile << "DP " << value1 << " " << value2 << std::endl;
        }
+    }
+    
+}
+VOID FloatValueRegMemPackedType4(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size, bool checkSP){
+    if(checkSP){
+        FLT32 value;
+        for (unsigned int i=0; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
+            PIN_SafeCopy(&value, (void *)(addr + 4*i), 4);
+            OutFile << "SP " << reg1->flt[i] << " " << value << std::endl;
+       }
+    }
+    else{
+        FLT64 value;
+        for (unsigned int i=0; i<MAX_DOUBLES_PER_PIN_REG; i=i+2){
+            PIN_SafeCopy(&value, (void *)(addr + 8*i), 8);
+            OutFile << "DP " << reg1->dbl[i] << " " << value << std::endl;
+        }
     }
     
 }
@@ -112,6 +130,7 @@ VOID FloatValue2RegPackedType2(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool chec
     }
 }
 
+
 VOID FloatValue2RegPackedType3(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool checkSP){
     if(checkSP){
         for (unsigned int i=0; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
@@ -130,7 +149,18 @@ VOID FloatValue2RegPackedType3(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool chec
         }
     }
 }
-
+VOID FloatValue2RegPackedType4(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool checkSP){
+    if(checkSP){
+        for (unsigned int i=0; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
+        OutFile <<  "SP " << reg1->flt[i] << " " << reg2->flt[i] << std::endl;
+        }
+    }
+    else{
+        for (unsigned int i=0; i < MAX_DOUBLES_PER_PIN_REG; i=i+2){
+        OutFile <<  "DP " << reg1->dbl[i] << " " << reg2->dbl[i] << std::endl;
+        }
+    }
+}
 VOID FloatValueRegMem(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size, bool checkSP){
     if(checkSP){
         FLT32 value;
@@ -165,7 +195,6 @@ VOID FloatValueMem(ADDRINT addr, uint32_t size, bool checkSP){
         PIN_SafeCopy(&value, (void *)addr, size);
         OutFile << "DP " << value << std::endl;
     }
-    
 }
 
 
@@ -335,13 +364,25 @@ VOID Instruction(INS ins, VOID *v)
     }
     else if(
         INS_Mnemonic(ins) == "VFMADD132PS" ||
-        INS_Mnemonic(ins) == "VFMADDSUB132PS" ||
-        INS_Mnemonic(ins) == "VFMSUBADD132PS" ||
         INS_Mnemonic(ins) == "VFNMADD132PS" 
         ){
             REG reg1 = INS_OperandReg(ins,0);
             REG reg2 = INS_OperandReg(ins,1);
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPacked, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, true, IARG_END);       
+    }
+    else if(
+        INS_Mnemonic(ins) == "VFMADDSUB132PS" 
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            REG reg2 = INS_OperandReg(ins,1);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType2, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, true, IARG_END);       
+    }
+    else if(
+        INS_Mnemonic(ins) == "VFMSUBADD132PS" 
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            REG reg2 = INS_OperandReg(ins,1);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType4, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, true, IARG_END);       
     }
     else if(INS_Mnemonic(ins) == "VFMADD132PD" ||
         INS_Mnemonic(ins) == "VFMADDSUB132PD" ||
@@ -351,6 +392,20 @@ VOID Instruction(INS ins, VOID *v)
             REG reg1 = INS_OperandReg(ins,0);
             REG reg2 = INS_OperandReg(ins,1);
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPacked, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, false, IARG_END);       
+    }
+    else if(
+        INS_Mnemonic(ins) == "VFMADDSUB132PD"
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            REG reg2 = INS_OperandReg(ins,1);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType2, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, false, IARG_END);       
+    }
+    else if(
+        INS_Mnemonic(ins) == "VFMSUBADD132PD"
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            REG reg2 = INS_OperandReg(ins,1);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType4, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, false, IARG_END);       
     }
     else if(INS_Mnemonic(ins) == "VFMADD213SS" ||
         INS_Mnemonic(ins) == "VFNMADD213SS"
@@ -382,8 +437,6 @@ VOID Instruction(INS ins, VOID *v)
     }
     else if(
         INS_Mnemonic(ins) == "VFMADD213PS" ||
-        INS_Mnemonic(ins) == "VFMADDSUB213PS" ||
-        INS_Mnemonic(ins) == "VFMSUBADD213PS" ||
         INS_Mnemonic(ins) == "VFNMADD213PS" 
         ){
             REG reg1 = INS_OperandReg(ins,0);
@@ -397,9 +450,35 @@ VOID Instruction(INS ins, VOID *v)
                 INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPacked, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg3, IARG_BOOL, true, IARG_END);
             }    
     }
+    else if(
+        INS_Mnemonic(ins) == "VFMADDSUB213PS"  
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            if(INS_OperandIsMemory(ins,2))
+            {
+                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType2, IARG_REG_REFERENCE, reg1, IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, true, IARG_END);            
+            }
+            else
+            {
+                REG reg3 = INS_OperandReg(ins,2);
+                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType2, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg3, IARG_BOOL, true, IARG_END);
+            }    
+    }
+    else if(
+        INS_Mnemonic(ins) == "VFMSUBADD213PS" 
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            if(INS_OperandIsMemory(ins,2))
+            {
+                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType4, IARG_REG_REFERENCE, reg1, IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, true, IARG_END);            
+            }
+            else
+            {
+                REG reg3 = INS_OperandReg(ins,2);
+                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType4, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg3, IARG_BOOL, true, IARG_END);
+            }    
+    }
     else if(INS_Mnemonic(ins) == "VFMADD213PD"||
-        INS_Mnemonic(ins) == "VFMADDSUB213PD" ||
-        INS_Mnemonic(ins) == "VFMSUBADD213PD" ||  
         INS_Mnemonic(ins) == "VFNMADD213PD"  
         ){
             REG reg1 = INS_OperandReg(ins,0);
@@ -413,6 +492,34 @@ VOID Instruction(INS ins, VOID *v)
                 INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPacked, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg3, IARG_BOOL, false, IARG_END);
             }    
     }
+    else if(INS_Mnemonic(ins) == "VFMADDSUB213PD"  
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            if(INS_OperandIsMemory(ins,2))
+            {
+                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType2, IARG_REG_REFERENCE, reg1, IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, false, IARG_END);            
+            }
+            else
+            {
+                REG reg3 = INS_OperandReg(ins,2);
+                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType2, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg3, IARG_BOOL, false, IARG_END);
+            }    
+    }
+    else if(
+        INS_Mnemonic(ins) == "VFMSUBADD213PD"
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            if(INS_OperandIsMemory(ins,2))
+            {
+                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType4, IARG_REG_REFERENCE, reg1, IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, false, IARG_END);            
+            }
+            else
+            {
+                REG reg3 = INS_OperandReg(ins,2);
+                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType4, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg3, IARG_BOOL, false, IARG_END);
+            }    
+    }
+
     else if(INS_Mnemonic(ins) == "VFMADD231SS" ||
         INS_Mnemonic(ins) == "VFNMADD231SS"
         ){
@@ -426,20 +533,36 @@ VOID Instruction(INS ins, VOID *v)
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMem, IARG_REG_REFERENCE, reg1, IARG_BOOL, false, IARG_END);  
     }
     else if(INS_Mnemonic(ins) == "VFMADD231PS" ||
-        INS_Mnemonic(ins) == "VFMADDSUB231PS" ||
-        INS_Mnemonic(ins) == "VFMSUBADD231PS" ||
         INS_Mnemonic(ins) == "VFNMADD231PS"
         ){
             REG reg1 = INS_OperandReg(ins,0);
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPacked, IARG_REG_REFERENCE, reg1, IARG_BOOL, true, IARG_END);  
     }
-    else if(INS_Mnemonic(ins) == "VFMADD231PD" ||
-        INS_Mnemonic(ins) == "VFMADDSUB231PD" ||
-        INS_Mnemonic(ins) == "VFMSUBADD231PD" ||  
+    else if(INS_Mnemonic(ins) == "VFMADDSUB231PS" 
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType2, IARG_REG_REFERENCE, reg1, IARG_BOOL, true, IARG_END);  
+    }
+    else if(INS_Mnemonic(ins) == "VFMSUBADD231PS" 
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType4, IARG_REG_REFERENCE, reg1, IARG_BOOL, true, IARG_END);  
+    }
+    else if(INS_Mnemonic(ins) == "VFMADD231PD" || 
         INS_Mnemonic(ins) == "VFNMADD231PD"
         ){
             REG reg1 = INS_OperandReg(ins,0);
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPacked, IARG_REG_REFERENCE, reg1, IARG_BOOL, false, IARG_END);  
+    }
+    else if(INS_Mnemonic(ins) == "VFMADDSUB231PD" 
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType2, IARG_REG_REFERENCE, reg1, IARG_BOOL, false, IARG_END);  
+    }
+    else if(INS_Mnemonic(ins) == "VFMSUBADD231PD" 
+        ){
+            REG reg1 = INS_OperandReg(ins,0);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType4, IARG_REG_REFERENCE, reg1, IARG_BOOL, false, IARG_END);  
     }
     else if(INS_Mnemonic(ins) == "V4FMADDSS" ||
         INS_Mnemonic(ins) == "V4FNMADDSS"
