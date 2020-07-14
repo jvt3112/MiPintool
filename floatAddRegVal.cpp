@@ -384,9 +384,7 @@ VOID Instruction(INS ins, VOID *v)
             REG reg2 = INS_OperandReg(ins,1);
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType4, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, true, IARG_END);       
     }
-    else if(INS_Mnemonic(ins) == "VFMADD132PD" ||
-        INS_Mnemonic(ins) == "VFMADDSUB132PD" ||
-        INS_Mnemonic(ins) == "VFMSUBADD132PD" ||  
+    else if(INS_Mnemonic(ins) == "VFMADD132PD" ||  
         INS_Mnemonic(ins) == "VFNMADD132PD" 
         ){
             REG reg1 = INS_OperandReg(ins,0);
