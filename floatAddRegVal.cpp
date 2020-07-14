@@ -30,17 +30,61 @@ VOID FloatValueRegMemPacked(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size, boo
     if(checkSP){
         FLT32 value;
         for (unsigned int i=0; i<MAX_FLOATS_PER_PIN_REG; i++){
-            PIN_SafeCopy(&value, (void *)(addr + i), 4);
+            PIN_SafeCopy(&value, (void *)(addr + 4*i), 4);
             OutFile << "SP " << reg1->flt[i] << " " << value << std::endl;
        }
     }
     else{
         FLT64 value;
         for (unsigned int i=0; i<MAX_DOUBLES_PER_PIN_REG; i++){
-            PIN_SafeCopy(&value, (void *)(addr + i), 8);
+            PIN_SafeCopy(&value, (void *)(addr + 8*i), 8);
             OutFile << "DP " << reg1->dbl[i] << " " << value << std::endl;
         }
     }
+}
+VOID FloatValueRegMemPackedType2(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size, bool checkSP){
+    if(checkSP){
+        FLT32 value;
+        for (unsigned int i=1; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
+            PIN_SafeCopy(&value, (void *)(addr + 4*i), 4);
+            OutFile << "SP " << reg1->flt[i] << " " << value << std::endl;
+       }
+    }
+    else{
+        FLT64 value;
+        for (unsigned int i=1; i<MAX_DOUBLES_PER_PIN_REG; i=i+2){
+            PIN_SafeCopy(&value, (void *)(addr + 8*i), 8);
+            OutFile << "DP " << reg1->dbl[i] << " " << value << std::endl;
+        }
+    }
+    
+}
+VOID FloatValueRegMemPackedType3(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size, bool checkSP){
+    if(checkSP){
+        FLT32 value1;
+        FLT32 value2;
+        for (unsigned int i=0; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
+            OutFile << "SP " << reg1->flt[i] << " " << reg1->flt[i+1] << std::endl;
+       }
+       for (unsigned int i=0; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
+            PIN_SafeCopy(&value1, (void *)(addr + 4*i), 4);
+            PIN_SafeCopy(&value2, (void *)(addr + 4*(i+1)), 4);
+            OutFile << "SP " << value1 << " " << value2 << std::endl;
+       }
+    }
+    else{
+        FLT64 value1;
+        FLT64 value2;
+        for (unsigned int i=0; i<MAX_DOUBLES_PER_PIN_REG; i=i+2){
+            OutFile << "DP " << reg1->dbl[i] << " " << reg1->dbl[i+1] << std::endl;
+       }
+       for (unsigned int i=0; i<MAX_DOUBLES_PER_PIN_REG; i=i+2){
+            PIN_SafeCopy(&value1, (void *)(addr + 8*i), 8);
+            PIN_SafeCopy(&value2, (void *)(addr + 8*(i+1)), 8);
+            OutFile << "DP " << value1 << " " << value2 << std::endl;
+       }
+    }
+    
 }
 
 VOID FloatValue2RegPacked(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool checkSP){
@@ -50,8 +94,39 @@ VOID FloatValue2RegPacked(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool checkSP){
         }
     }
     else{
-        for (unsigned int i=0; i<MAX_DOUBLES_PER_PIN_REG; i++){
+        for (unsigned int i=0; i < MAX_DOUBLES_PER_PIN_REG; i++){
         OutFile <<  "DP " << reg1->dbl[i] << " " << reg2->dbl[i] << std::endl;
+        }
+    }
+}
+VOID FloatValue2RegPackedType2(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool checkSP){
+    if(checkSP){
+        for (unsigned int i=1; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
+        OutFile <<  "SP " << reg1->flt[i] << " " << reg2->flt[i] << std::endl;
+        }
+    }
+    else{
+        for (unsigned int i=1; i < MAX_DOUBLES_PER_PIN_REG; i=i+2){
+        OutFile <<  "DP " << reg1->dbl[i] << " " << reg2->dbl[i] << std::endl;
+        }
+    }
+}
+
+VOID FloatValue2RegPackedType3(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool checkSP){
+    if(checkSP){
+        for (unsigned int i=0; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
+        OutFile <<  "SP " << reg1->flt[i] << " " << reg1->flt[i+1] << std::endl;
+        }
+        for (unsigned int i=0; i<MAX_FLOATS_PER_PIN_REG; i=i+2){
+        OutFile <<  "SP " << reg2->flt[i] << " " << reg2->flt[i+1] << std::endl;
+        }
+    }
+    else{
+        for (unsigned int i=0; i < MAX_DOUBLES_PER_PIN_REG; i=i+2){
+        OutFile <<  "DP " << reg1->dbl[i] << " " << reg1->dbl[i+1] << std::endl;
+        }
+        for (unsigned int i=0; i < MAX_DOUBLES_PER_PIN_REG; i=i+2){
+        OutFile <<  "DP " << reg2->dbl[i] << " " << reg2->dbl[i+1] << std::endl;
         }
     }
 }
@@ -70,6 +145,7 @@ VOID FloatValueRegMem(PIN_REGISTER* reg1, ADDRINT addr, uint32_t size, bool chec
     
 }
 
+
 VOID FloatValue2Reg(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool checkSP){
     if(checkSP){
         OutFile << "SP " << reg1->flt[0] << " " << reg2->flt[0] << std::endl;
@@ -78,12 +154,25 @@ VOID FloatValue2Reg(PIN_REGISTER* reg1, PIN_REGISTER* reg2, bool checkSP){
         OutFile << "DP " << reg1->dbl[0] << " " << reg2->dbl[0] << std::endl;
     }
 }
+VOID FloatValueMem(ADDRINT addr, uint32_t size, bool checkSP){
+    if(checkSP){
+        FLT32 value;
+        PIN_SafeCopy(&value, (void *)addr, size);
+        OutFile << "SP " << value << std::endl;
+    }
+    else{
+        FLT64 value;
+        PIN_SafeCopy(&value, (void *)addr, size);
+        OutFile << "DP " << value << std::endl;
+    }
+    
+}
+
 
 // Pin calls this function every time a new instruction is encountered
 VOID Instruction(INS ins, VOID *v)
 {
-    /*const char *all_float_add_ins[50] = { "FADD", "FADDP", "FIADD"};*/
-
+    
     if(INS_Mnemonic(ins) == "FADD" 
         ){
         int opcount = INS_OperandCount(ins);
@@ -92,7 +181,18 @@ VOID Instruction(INS ins, VOID *v)
             REG reg2 = INS_OperandReg(ins,1);
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2Reg, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, true, IARG_END);
         }
+        if(opcount == 1){
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueMem,  IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, true, IARG_END);
+        }
     }
+    else if(INS_Mnemonic(ins) == "FIADD" 
+        ){
+        int opcount = INS_OperandCount(ins);
+        if(opcount == 1){
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueMem,  IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, true, IARG_END);
+        }
+    }
+
     else if(INS_Mnemonic(ins) == "FADDP"
         ){
         int opcount = INS_OperandCount(ins);
@@ -118,7 +218,6 @@ VOID Instruction(INS ins, VOID *v)
     }
     else if(INS_Mnemonic(ins) == "ADDSD" 
         ){
-        // int opcount = INS_OperandCount(ins); All opcounts already found by research :p
         REG reg1 = INS_OperandReg(ins,0);
         if(INS_OperandIsMemory(ins,1))
         {
@@ -130,9 +229,7 @@ VOID Instruction(INS ins, VOID *v)
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2Reg, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, false, IARG_END);
         }
     }
-    else if( INS_Mnemonic(ins) == "ADDPS" || 
-        INS_Mnemonic(ins) == "ADDSUBPS" || 
-        INS_Mnemonic(ins) == "HADDPS"
+    else if( INS_Mnemonic(ins) == "ADDPS" 
         ){
         // int opcount = INS_OperandCount(ins); All opcounts already found by research :p
         REG reg1 = INS_OperandReg(ins,0);
@@ -146,9 +243,38 @@ VOID Instruction(INS ins, VOID *v)
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPacked, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, true, IARG_END);
         }
     }
-    else if(INS_Mnemonic(ins) == "ADDPD" ||  
-        INS_Mnemonic(ins) == "ADDSUBPD" || 
-        INS_Mnemonic(ins) == "HADDPD"
+    else if( 
+        INS_Mnemonic(ins) == "HADDPS"
+        ){
+        // int opcount = INS_OperandCount(ins); All opcounts already found by research :p
+        REG reg1 = INS_OperandReg(ins,0);
+        if(INS_OperandIsMemory(ins,1))
+        {
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType3, IARG_REG_REFERENCE, reg1, IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, true, IARG_END);            
+        }
+        else
+        {
+            REG reg2 = INS_OperandReg(ins,1);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType3, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, true, IARG_END);
+        }
+    }
+    else if( 
+        INS_Mnemonic(ins) == "ADDSUBPS"
+        ){
+        // int opcount = INS_OperandCount(ins); All opcounts already found by research :p
+        REG reg1 = INS_OperandReg(ins,0);
+        if(INS_OperandIsMemory(ins,1))
+        {
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType2, IARG_REG_REFERENCE, reg1, IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, true, IARG_END);            
+        }
+        else
+        {
+            REG reg2 = INS_OperandReg(ins,1);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType2, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, true, IARG_END);
+        }
+    }
+
+    else if(INS_Mnemonic(ins) == "ADDPD"
         ){
         // int opcount = INS_OperandCount(ins); All opcounts already found by research :p
         REG reg1 = INS_OperandReg(ins,0);
@@ -160,6 +286,36 @@ VOID Instruction(INS ins, VOID *v)
         {
             REG reg2 = INS_OperandReg(ins,1);
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPacked, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, false, IARG_END);
+        }
+    }
+    else if(   
+        INS_Mnemonic(ins) == "HADDPD"
+        ){
+        // int opcount = INS_OperandCount(ins); All opcounts already found by research :p
+        REG reg1 = INS_OperandReg(ins,0);
+        if(INS_OperandIsMemory(ins,1))
+        {
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType3, IARG_REG_REFERENCE, reg1, IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, false, IARG_END);            
+        }
+        else
+        {
+            REG reg2 = INS_OperandReg(ins,1);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType3, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, false, IARG_END);
+        }
+    }
+    else if(  
+        INS_Mnemonic(ins) == "ADDSUBPD" 
+        ){
+        // int opcount = INS_OperandCount(ins); All opcounts already found by research :p
+        REG reg1 = INS_OperandReg(ins,0);
+        if(INS_OperandIsMemory(ins,1))
+        {
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValueRegMemPackedType2, IARG_REG_REFERENCE, reg1, IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE, IARG_BOOL, false, IARG_END);            
+        }
+        else
+        {
+            REG reg2 = INS_OperandReg(ins,1);
+            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)FloatValue2RegPackedType2, IARG_REG_REFERENCE, reg1, IARG_REG_REFERENCE, reg2, IARG_BOOL, false, IARG_END);
         }
     }
 
